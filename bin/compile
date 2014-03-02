@@ -223,7 +223,9 @@ fi
 cp libsvm.so.2 $LIBSVM_BASE
 cp python/svm.py $LIBSVM_BASE/python
 cp python/svmutil.py $LIBSVM_BASE/python
-puts-step "Successfully installed libsvm to $LIBSVM_BASE"
+cd $LIBSVM_BASE && rm -rf $LIBSVM_DIR
+
+cd $BUILD_DIR
 
 set -e
 hash -r
