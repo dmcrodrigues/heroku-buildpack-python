@@ -197,6 +197,34 @@ if [ "$FRESH_PYTHON" ] || [[ ! $(pip --version) == *$PIP_VERSION* ]]; then
   bpwatch stop prepare_environment
 fi
 
+set +e
+puts-step "Installing python-libsvm"
+
+mkdir .libsvm &> /dev/null
+
+curl -L -o .libsvm/libsvm.tgz http://www.csie.ntu.edu.tw/~cjlin/cgi-bin/libsvm.cgi?+http://www.csie.ntu.edu.tw/~cjlin/libsvm+tar.gz > /dev/null 2>&1
+cd .libsvm
+LIBSVM_BASE="$(pwd)"
+tar zxf libsvm.tgz && rm libsvm.tgz && mkdir lib && mkdir python > /dev/null 2>&1
+
+for dir in $(ls); do
+  if [[ $dir =~ ^libsvm ]]; then
+    LIBSVM_DIR="$LIBSVM_BASE/$dir"
+    break
+  fi
+done
+
+cd $LIBSVM_DIR
+make lib > /dev/null 2>&1
+if [ $? != 0 ]; then
+  puts-warn "Failed to build libsvm"
+  exit 1
+fi
+cp libsvm.so.2 $LIBSVM_BASE
+cp python/svm.py $LIBSVM_BASE/python
+cp python/svmutil.py $LIBSVM_BASE/python
+puts-step "Successfully installed libsvm to $LIBSVM_BASE"
+
 set -e
 hash -r
 
@@ -242,6 +270,7 @@ set-default-env LD_LIBRARY_PATH /app/.heroku/vendor/lib
 set-default-env LANG en_US.UTF-8
 set-default-env PYTHONHASHSEED random
 set-default-env PYTHONPATH /app/
+set-default-env PYTHONPATH /app/:/app/.libsvm/python
 
 
 # Experimental post_compile hook.
